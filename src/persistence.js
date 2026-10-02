@@ -1,0 +1,3 @@
+export function openDatabase(){return new Promise((resolve,reject)=>{const req=indexedDB.open('localfirst-whiteboard',1);req.onupgradeneeded=()=>req.result.createObjectStore('rooms');req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+export function loadRoom(db,room){return new Promise((resolve,reject)=>{const req=db.transaction('rooms').objectStore('rooms').get(room);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+export function saveRoom(db,room,update){return new Promise((resolve,reject)=>{const tx=db.transaction('rooms','readwrite');tx.objectStore('rooms').put(update,room);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error)})}

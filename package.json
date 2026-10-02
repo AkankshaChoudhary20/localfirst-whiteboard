@@ -1,0 +1,23 @@
+{
+  "name": "localfirst-whiteboard",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "server": "node server/index.mjs",
+    "build": "vite build",
+    "start": "node server/index.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "ws": "8.21.3",
+    "yjs": "13.6.32"
+  },
+  "devDependencies": {
+    "vite": "6.4.3"
+  },
+  "overrides": {
+    "picomatch": "4.0.5"
+  }
+}
