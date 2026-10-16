@@ -1,8 +1,8 @@
-import {createServer} from 'node:http';import {readFile} from 'node:fs/promises';import {extname,resolve,sep} from 'node:path';import {WebSocketServer,WebSocket} from 'ws';import * as Y from 'yjs';import {Rooms} from './rooms.mjs';
+import {createServer} from 'node:http';import {readFile} from 'node:fs/promises';import {extname,resolve,sep} from 'node:path';import {WebSocketServer,WebSocket} from 'ws';import * as Y from 'yjs';import {Rooms} from './rooms.mjs';import {upgradeRoom} from './upgrade.mjs';
 const root=resolve('dist'),rooms=new Rooms(process.env.BOARD_DB||'data/rooms'),clients=new Map();
 const server=createServer(async(req,res)=>{try{const pathname=new URL(req.url,'http://localhost').pathname;const path=resolve(root,'.'+(pathname==='/'?'/index.html':decodeURIComponent(pathname)));if(!path.startsWith(root+sep)){res.writeHead(403);res.end();return}const content=await readFile(path);res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png'})[extname(path)]||'application/octet-stream');res.end(content)}catch{res.writeHead(404);res.end('Build the app with npm run build before using the production server.')}});
 const wss=new WebSocketServer({noServer:true,maxPayload:1024*1024});
-server.on('upgrade',(req,socket,head)=>{const match=/^\/room\/([a-z0-9-]{1,64})$/.exec(new URL(req.url,'http://localhost').pathname);if(!match||(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)){socket.destroy();return}wss.handleUpgrade(req,socket,head,ws=>wss.emit('connection',ws,match[1]))});
+server.on('upgrade',(req,socket,head)=>{const room=upgradeRoom(req.url,req.headers.origin,req.headers.host);if(!room){socket.destroy();return}wss.handleUpgrade(req,socket,head,ws=>wss.emit('connection',ws,room))});
 wss.on('connection',(ws,room)=>{
  const doc=rooms.get(room);if(!clients.has(room))clients.set(room,new Set());const set=clients.get(room);set.add(ws);ws.cursor=null;
  const broadcast=(data,binary=false)=>{for(const c of set)if(c.readyState===WebSocket.OPEN)c.send(data,{binary})};
